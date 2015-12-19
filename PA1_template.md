@@ -5,16 +5,13 @@ output:
     keep_md: yes
 ---
 
-```{r load_libs, message = FALSE, echo = FALSE}
-suppressPackageStartupMessages(library(plyr))
-suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(ggplot2))
-```
+
 ## 1. Loading and preprocessing the data
   
 ### 1.1 Loading the data  
   
-```{r load_data}
+
+```r
 raw.df <- read.csv(unz(description = "activity.zip", filename = "activity.csv"))
 ```
   
@@ -30,7 +27,8 @@ Skipping.
   
 ### 2.1 Calculate the total number of steps taken per day
   
-```{r calc_total_steps}
+
+```r
 sd2.df <- raw.df %>% 
     filter(!is.na(steps)) %>% 
     group_by(date) %>% 
@@ -40,20 +38,24 @@ sd2.df <- raw.df %>%
   
 ### 2.2 Histogram of the total number of steps taken each day  
   
-```{r plot_total_steps}
+
+```r
 hist(sd2.df$steps, main = "Raw data", xlab = "Steps taken each day")
 ```
+
+![plot of chunk plot_total_steps](figure/plot_total_steps-1.png) 
   
 ### 2.3 Mean and median of the total numbers of steps taken each day  
   
-- Mean: `r sprintf("%.2f", mean(sd2.df$steps))`  
-- Median: `r sprintf("%.2f", median(sd2.df$steps))`  
+- Mean: 10766.19  
+- Median: 10765.00  
   
 ## 3. What is the average daily activity pattern?
   
 ### 3.1 Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)  
   
-```{r calc_mean_steps}
+
+```r
 tmp.df <- raw.df %>% 
     filter(!is.na(steps)) %>% 
     group_by(interval) %>% 
@@ -62,29 +64,28 @@ tmp.df <- raw.df %>%
 
 plot(tmp.df$steps ~ tmp.df$interval, type = "l", ylab = "Average steps", xlab = "Interval", main = "Raw Data")
 ```
+
+![plot of chunk calc_mean_steps](figure/calc_mean_steps-1.png) 
   
 ### 3.2 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?  
   
-```{r calc_max_pos, message = FALSE, echo = FALSE}
-max.pos <- which.max(tmp.df$steps)
-```
+
   
-The 5-minute interval containing the maximum number of steps on average across all days in the dataset is interval `r tmp.df$interval[max.pos]`.  
-The (averaged) maximum is  `r tmp.df$steps[max.pos]`.   
+The 5-minute interval containing the maximum number of steps on average across all days in the dataset is interval 835.  
+The (averaged) maximum is  206.1698113.   
   
 ## 4. Imputing missing values
   
 ### 4.1 Calculate and report the total number of missing values in the dataset (i.e. total number of rows with NAs)  
   
-```{r calc_na_cnt, echo = FALSE, message = FALSE}
-na.cnt = sum(is.na(raw.df$steps))
-```
+
   
-The total number of missing values in the data set is `r na.cnt`  
+The total number of missing values in the data set is 2304  
   
 ### 4.2 Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.  
   
-```{r calc_median_steps}
+
+```r
 # My strategy will be to replace NAs with the median for that 5-minute interval
 tmp.df <- raw.df %>% 
     filter(!is.na(steps)) %>% 
@@ -95,7 +96,8 @@ tmp.df <- raw.df %>%
   
 ### 4.3 Create a new dataset that is equal to the original dataset but with the missing data filled in.  
   
-```{r impute_data}
+
+```r
 imp.df <- ddply(
     raw.df, 
     c("date", "interval"), 
@@ -106,7 +108,8 @@ imp.df <- ddply(
   
 ### 4.4 Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?  
   
-```{r plot_imputed_data}
+
+```r
 sd4.df <- imp.df %>% 
     group_by(date) %>% 
     select(steps) %>% 
@@ -114,9 +117,11 @@ sd4.df <- imp.df %>%
 
 hist(sd4.df$steps, main = "Imputed data", xlab = "Steps taken each day")
 ```
+
+![plot of chunk plot_imputed_data](figure/plot_imputed_data-1.png) 
   
-- Mean: `r sprintf("%.2f", mean(sd4.df$steps))`, (originally `r sprintf("%.2f", mean(sd2.df$steps))`)  
-- Median: `r sprintf("%.2f", median(sd4.df$steps))`, (originally `r sprintf("%.2f", median(sd2.df$steps))`)  
+- Mean: 9503.87, (originally 10766.19)  
+- Median: 10395.00, (originally 10765.00)  
   
 ```
 Both the mean and median for the data set went down by quite a bit.  
@@ -129,7 +134,8 @@ Replacing the NAs with the median number of steps for the interval, pushes down 
   
 ### 5.1 Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given
 date is a weekday or weekend day.  
-```{r calc_dowclass}
+
+```r
 as.dowclass <- function(x) {
     as.factor(ifelse(weekdays(as.Date(x), abbreviate = TRUE) %in% c("Sat", "Sun"), "Weekend", "Weekday"))
 }
@@ -140,7 +146,8 @@ imp.df <- imp.df %>%
   
 ### 5.2 Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.  
   
-```{r plot_imputed_data_by_dowclass}
+
+```r
 tmp.df <- imp.df %>% 
     group_by(interval, dowclass) %>% 
     select(steps, interval, dowclass) %>% 
@@ -153,6 +160,8 @@ ggplot(data = tmp.df, aes(x = interval, y = steps)) +
     ylab("Average Steps") + 
     ggtitle("Imputed Data")
 ```
+
+![plot of chunk plot_imputed_data_by_dowclass](figure/plot_imputed_data_by_dowclass-1.png) 
   
 ```
 The overall activity pattern is about the same.  
